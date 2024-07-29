@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px 
+
 
 # Function to promote headers
 def promote_headers(df):
@@ -41,10 +43,10 @@ def add_custom_columns(df):
     return df
 
 # Streamlit app
-st.title("Dashboard Data Loader")
+st.title("Dashboard ")
 
 # File uploader
-source_file = st.file_uploader("Choose the LYON 2024 Répartition classes🚀🎒  .xlsx file", type="xlsx")
+source_file = st.file_uploader("Selectionne le fichier LYON 2024 Répartition classes🚀🎒  .xlsx ", type="xlsx")
 
 if source_file:
     try:
@@ -70,26 +72,59 @@ if source_file:
         # Combine all sheets
         combined_data = pd.concat(processed_sheets, ignore_index=True)
         
-        # Display the processed data
-        st.write("Processed Data:")
-        st.dataframe(combined_data)
+        # # Display the processed data
+        # st.write("Données :")
+        # st.dataframe(combined_data)
         
+# Calculate the total number and percentage of "Placé" students
+        total_students = combined_data.shape[0]
+        total_place = combined_data[combined_data['Status'] == 'Placé'].shape[0]
+        percentage_place = (total_place / total_students) * 100 if total_students > 0 else 0
+        
+        # Display the KPI
+        st.write("### Pourcentage des étudiants Placé")
+        st.metric(label="Pourcentage Placé", value=f"{percentage_place:.2f}%", delta=f"{total_place} étudiants")
+        
+        # Create visualizations
+        st.write("Visualisations :")
 
-
-
-        # Option to download the processed data
-        @st.cache_data
-        def convert_df(df):
-            return df.to_csv(index=False).encode('utf-8')
-
-        csv = convert_df(combined_data)
-
-        st.download_button(
-            label="Download Processed Data as CSV",
-            data=csv,
-            file_name='processed_data.csv',
-            mime='text/csv',
+        # Visualization for Sex Distribution by Class
+        sex_chart = px.histogram(
+            combined_data, 
+            x='SheetName', 
+            color='PersonalizedSexe', 
+            barmode='group',
+            title='Répartition par sexe selon la classe',
+            labels={'SPECIALISATION': 'Classe', 'count': 'Nombre', 'PersonalizedSexe': 'Sexe'}
         )
+        st.plotly_chart(sex_chart, use_container_width=True)
+
+        # Visualization for Status Distribution by Class
+        status_chart = px.histogram(
+            combined_data, 
+            x='SheetName', 
+            color='Status', 
+            barmode='group',
+            title='Répartition par statut selon la classe',
+            labels={'SPECIALISATION': 'Classe', 'count': 'Nombre', 'Status': 'Statut'}
+        )
+        st.plotly_chart(status_chart, use_container_width=True)
+
+
+
+        # # Option to download the processed data
+        # @st.cache_data
+        # def convert_df(df):
+        #     return df.to_csv(index=False).encode('utf-8')
+
+        # csv = convert_df(combined_data)
+
+        # st.download_button(
+        #     label="Download Processed Data as CSV",
+        #     data=csv,
+        #     file_name='processed_data.csv',
+        #     mime='text/csv',
+        # )
         
     except Exception as e:
         st.error(f"An error occurred: {e}")
