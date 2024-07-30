@@ -130,7 +130,7 @@ if source_file:
             text='Percentage',
             color_discrete_map=color_map
         )
-        percentage_sex_chart.update_layout(barmode='stack', yaxis={'title': 'Pourcentage'})
+        percentage_sex_chart.update_layout(barmode='stack', yaxis={'title': 'Classe'})
         percentage_sex_chart.update_traces(texttemplate='%{text:.2f}%', textposition='inside')
         st.plotly_chart(percentage_sex_chart, use_container_width=True)
 
