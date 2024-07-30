@@ -43,7 +43,12 @@ def add_custom_columns(df):
     return df
 
 # Streamlit app
-st.title("Dashboard ")
+
+
+st.set_page_config( page_title = "Dashboard", 
+page_icon = "🏠 "
+)
+st.title("Dashboard  🏠 ")
 
 # File uploader
 source_file = st.file_uploader("Selectionne le fichier LYON 2024 Répartition classes🚀🎒  .xlsx ", type="xlsx")
@@ -82,11 +87,12 @@ if source_file:
         percentage_place = (total_place / total_students) * 100 if total_students > 0 else 0
         
         # Display the KPI
-        st.write("### Pourcentage des étudiants Placé")
+        # st.write("### Pourcentage des étudiants 'Placé'")
         st.metric(label="Pourcentage Placé", value=f"{percentage_place:.2f}%", delta=f"{total_place} étudiants")
         
-        # Create visualizations
-        st.write("Visualisations :")
+        color_map = {'F' : "#9AEBA3",
+                    "M": "#00BBC9"}
+
 
         # Visualization for Sex Distribution by Class
         sex_chart = px.histogram(
@@ -95,9 +101,41 @@ if source_file:
             color='PersonalizedSexe', 
             barmode='group',
             title='Répartition par sexe selon la classe',
-            labels={'SPECIALISATION': 'Classe', 'count': 'Nombre', 'PersonalizedSexe': 'Sexe'}
+            labels={'SPECIALISATION': 'Classe', 'count': 'Nombre', 'PersonalizedSexe': 'Sexe'},
+            color_discrete_map=color_map
+        )
+        sex_chart.update_layout(
+            yaxis = dict(title = "total"),
+            xaxis = dict(title = "Classe"),
         )
         st.plotly_chart(sex_chart, use_container_width=True)
+
+
+# Visualization for Percentage Distribution of Sex by Class
+        # Visualization for Percentage Distribution of Sex by Class
+        percentage_sex_data = combined_data.groupby(['SheetName', 'PersonalizedSexe']).size().reset_index(name='Count')
+        total_per_class = combined_data.groupby('SheetName').size().reset_index(name='Total')
+        percentage_sex_data = pd.merge(percentage_sex_data, total_per_class, on='SheetName')
+        percentage_sex_data['Percentage'] = (percentage_sex_data['Count'] / percentage_sex_data['Total']) * 100
+        percentage_sex_data = percentage_sex_data.sort_values(by = "Percentage")
+
+
+        percentage_sex_chart = px.bar(
+            percentage_sex_data, 
+            y='SheetName', 
+            x='Percentage', 
+            color='PersonalizedSexe', 
+            title='Pourcentage par sexe selon la classe',
+            labels={'SheetName': 'Classe', 'Percentage': 'Pourcentage', 'PersonalizedSexe': 'Sexe'},
+            text='Percentage',
+            color_discrete_map=color_map
+        )
+        percentage_sex_chart.update_layout(barmode='stack', yaxis={'title': 'Pourcentage'})
+        percentage_sex_chart.update_traces(texttemplate='%{text:.2f}%', textposition='inside')
+        st.plotly_chart(percentage_sex_chart, use_container_width=True)
+
+
+
 
         # Visualization for Status Distribution by Class
         status_chart = px.histogram(
@@ -107,6 +145,10 @@ if source_file:
             barmode='group',
             title='Répartition par statut selon la classe',
             labels={'SPECIALISATION': 'Classe', 'count': 'Nombre', 'Status': 'Statut'}
+        )
+        status_chart.update_layout(
+            yaxis = dict(title = "total"),
+            xaxis = dict(title = "Classe"),
         )
         st.plotly_chart(status_chart, use_container_width=True)
 
